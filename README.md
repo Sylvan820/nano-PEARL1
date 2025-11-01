@@ -1,104 +1,194 @@
-<div align="center">
-
-![nano-pearl](static/nano_pearl.gif)
-
-[![Status](https://img.shields.io/badge/status-active-brightgreen)](#) 
-[![Python](https://img.shields.io/badge/python-%E2%89%A53.12-blue)](#)
-[![PyTorch](https://img.shields.io/badge/PyTorch-%E2%89%A52.4-EE4C2C)](#)
-[![CUDA](https://img.shields.io/badge/CUDA-12.x-76B900)](#)
-[![ArXiv](https://img.shields.io/badge/arXiv-2408.11850-b31b1b)](https://arxiv.org/abs/2408.11850)
-[![Conference](https://img.shields.io/badge/ICLR-2025-4B7BEC)](#)
-
-<em>A lightweight parallel speculative decoding implementation in nano-vllm style.<br></em>
-
-</div>
-
-# 🚀 nano-PEARL
-
-> **A lightweight parallel speculative decoding implementation in nano-vllm style**
-
-nano-PEARL is a single-node, multi-GPU parallel speculative decoding engine. It decouples Draft and Target models onto separate device groups and runs them concurrently with on-the-fly verification, prefix KV caching, CUDA Graphs, and tensor parallelism — aiming for high throughput without sacrificing output quality.
-
-## 🎉 Latest News
-
-🚧 **Coming Soon**: More updates and features are in development!
-
-- [2025.10] 🔥 We release the source code of nano-PEARL. Any PR is warmly welcomed!
-
-## 📦 Installation
-
-Our nano-PEARL is built based on [nano-vllm](https://github.com/GeeeekExplorer/nano-vllm), and the installation is almost same with nano-vllm (only need to additionally install `rich` for colorful log). 🎨
-
-
-First create an environment with `python>=3.12`:
-```shell
-conda create -n nano-pearl python=3.12 -y
-conda activate nano-pearl
-```
-
-Then, install packages with `uv` or `pip`:
-
-**From source:**
-```shell
-uv pip install -e . # from current path
-```
-
-**From GitHub:**
-```shell
-pip install git+https://github.com/smart-lty/nano-PEARL.git # from github
-```
-⚠️ When you directly use pip for installation, you may encounter that build flash-attn needs torch installed. In this case, you should **install torch first**, and then re-run the installation command.
-
-⚠️ If the installation of flash-attn is very slow, we strongly recommand you to download a whl file and **build flash attn from wheel**.
-
-
-## ✨ Key Features
-
-- 🔄 **Draft-Target Disaggregation**: The draft model and the target model are loaded in separate devices, avoiding load-imbalance and resource competition.
-- ⚡ **Parallel Inference**: Both the draft model and the target model run inference in parallel, fully exploiting the GPU utilization!
-- 🎯 **Adaptive Draft Length**: 
-  - When the alignment is good, the draft model could generate draft tokens without being interrupted by the target model.
-  - When the alignment is poor, the target model could prevent the draft model from generating trash draft tokens.
-- 🤖 **Auto-Set Hyper-parameters**: Automatically configure optimal parameters for your hardware setup.
-- 🚀 **High Performance**: Built on CUDA Graphs and tensor parallelism for maximum throughput.
-- 💾 **Memory Efficient**: Prefix KV caching reduces memory usage while maintaining performance.
-
-## 📊 BenchMark Results
-
-Coming Soon!
-
-## 📋 TODOs
-
-- [ ]  **Dynamic TP Size**: Support dynamic TP size, including TP=6/7, hence the 8 GPUs can be fully used!
-- [ ]  **Draft Model Temperature**: Support setting a non-zero temperature for the draft model.
-- [ ]  **Continuous Batching**: Support continuous batching and chunked prefill.
-
-## 🐛 Bug Fixing
-Coming Soon!
-
-## 🙏 Acknowledgements
-
-
-This project has been influenced by many execellent projects in the LLM community, such as [nano-vllm](https://github.com/GeeeekExplorer/nano-vllm) and [PEARL](https://github.com/smart-lty/ParallelSpeculativeDecoding). The nano-PEARL logo is designed by Veo 3. 
-
-## 📚 Citation
-```bibtex
-@inproceedings{
-liu2025pearl,
-title={{PEARL}: Parallel Speculative Decoding with Adaptive Draft Length},
-author={Tianyu Liu and Yun Li and Qitan Lv and Kai Liu and Jianchen Zhu and Winston Hu and Xiao Sun},
-booktitle={The Thirteenth International Conference on Learning Representations},
-year={2025},
-url={https://openreview.net/forum?id=QOXrVMiHGK}
-}
-
-@misc{liu2025pearlparallelspeculativedecoding,
-      title={PEARL: Parallel Speculative Decoding with Adaptive Draft Length}, 
-      author={Tianyu Liu and Yun Li and Qitan Lv and Kai Liu and Jianchen Zhu and Winston Hu and Xiao Sun},
-      year={2025},
-      eprint={2408.11850},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2408.11850}, 
-}
-```
+| Draft Model | Target Model | Batch Size | Benchmark | Mode | Num Tokens | Time (s) | Throughput (tok/s) | MAT | Speedup |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | AIME | PEARL | 28790 | 430.21 | 66.92 | 14.93 | 4.04 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | AIME | AR | 12000 | 725.08 | 16.55 | 1 | 4.04 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | CNNDM | PEARL | 28550 | 934.53 | 30.55 | 3.81 | 1.86 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | CNNDM | AR | 25600 | 1560.98 | 16.40 | 1 | 1.86 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | GSM8K | PEARL | 43410 | 934.75 | 46.44 | 7.26 | 2.83 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | GSM8K | AR | 25600 | 1558.13 | 16.43 | 1 | 2.83 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | HumanEval | PEARL | 50420 | 904.23 | 55.76 | 9.54 | 3.36 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | HumanEval | AR | 25600 | 1543.91 | 16.58 | 1 | 3.36 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | AIME | PEARL | 28510 | 121.73 | 234.20 | 14.78 | 3.54 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | AIME | AR | 11200 | 169.18 | 66.20 | 1 | 3.54 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | CNNDM | PEARL | 28690 | 268.38 | 106.90 | 3.84 | 1.63 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | CNNDM | AR | 25600 | 390.24 | 65.60 | 1 | 1.63 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | GSM8K | PEARL | 43300 | 266.46 | 162.50 | 7.27 | 2.47 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | GSM8K | AR | 25600 | 390.00 | 65.64 | 1 | 2.47 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | HumanEval | PEARL | 50680 | 259.63 | 195.19 | 9.58 | 2.94 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | HumanEval | AR | 25600 | 386.10 | 66.30 | 1 | 2.94 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | AIME | PEARL | 26310 | 65.53 | 401.52 | 13.91 | 3.73 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | AIME | AR | 11200 | 104.09 | 107.60 | 1 | 3.73 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | CNNDM | PEARL | 28410 | 154.99 | 183.30 | 3.80 | 1.72 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | CNNDM | AR | 25600 | 240.15 | 106.60 | 1 | 1.72 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | GSM8K | PEARL | 43700 | 156.85 | 278.61 | 7.31 | 2.61 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | GSM8K | AR | 25600 | 239.70 | 106.80 | 1 | 2.61 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | HumanEval | PEARL | 50510 | 150.96 | 334.60 | 9.69 | 3.10 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | HumanEval | AR | 25600 | 237.51 | 107.78 | 1 | 3.10 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | AIME | PEARL | 22820 | 34.10 | 669.21 | 14.15 | 3.37 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | AIME | AR | 9600 | 48.34 | 198.60 | 1 | 3.37 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | CNNDM | PEARL | 28810 | 94.30 | 305.52 | 3.82 | 1.55 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | CNNDM | AR | 25600 | 130.08 | 196.80 | 1 | 1.55 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | GSM8K | PEARL | 43100 | 92.81 | 464.40 | 7.21 | 2.35 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | GSM8K | AR | 25600 | 129.82 | 197.20 | 1 | 2.35 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | HumanEval | PEARL | 50010 | 89.69 | 557.59 | 9.42 | 2.80 |
+| models--Qwen--Qwen2.5-1.5B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | HumanEval | AR | 25600 | 128.64 | 199.00 | 1 | 2.80 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | AIME | PEARL | 23968 | 444.34 | 53.94 | 17.09 | 3.01 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | AIME | AR | 12000 | 669.27 | 17.93 | 1 | 3.01 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | CNNDM | PEARL | 28670 | 944.96 | 30.34 | 4.15 | 2.03 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | CNNDM | AR | 25600 | 1709.00 | 14.98 | 1 | 2.03 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | GSM8K | PEARL | 38797 | 957.95 | 40.50 | 7.61 | 2.67 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | GSM8K | AR | 25600 | 1690.88 | 15.14 | 1 | 2.67 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | HumanEval | PEARL | 43735 | 875.75 | 49.94 | 10.33 | 2.77 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 1 | HumanEval | AR | 25600 | 1417.40 | 18.06 | 1 | 2.77 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | AIME | PEARL | 24310 | 141.68 | 171.58 | 17.13 | 2.80 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | AIME | AR | 11200 | 182.72 | 61.29 | 1 | 2.80 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | CNNDM | PEARL | 28410 | 525.13 | 54.10 | 4.19 | 1.87 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | CNNDM | AR | 25600 | 889.57 | 28.78 | 1 | 1.87 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | GSM8K | PEARL | 39010 | 425.88 | 91.60 | 7.57 | 2.46 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | GSM8K | AR | 25600 | 687.97 | 37.21 | 1 | 2.46 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | HumanEval | PEARL | 43510 | 363.49 | 119.70 | 10.38 | 2.56 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 4 | HumanEval | AR | 25600 | 547.97 | 46.72 | 1 | 2.56 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | AIME | PEARL | 22401 | 69.21 | 323.65 | 15.51 | 2.78 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | AIME | AR | 11200 | 96.11 | 116.53 | 1 | 2.78 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | CNNDM | PEARL | 28121 | 320.61 | 87.71 | 4.13 | 1.77 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | CNNDM | AR | 25600 | 516.13 | 49.60 | 1 | 1.77 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | GSM8K | PEARL | 38496 | 237.93 | 161.79 | 7.48 | 2.31 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | GSM8K | AR | 25600 | 366.60 | 69.83 | 1 | 2.31 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | HumanEval | PEARL | 43262 | 212.07 | 204.00 | 10.40 | 2.43 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 8 | HumanEval | AR | 25600 | 305.20 | 83.88 | 1 | 2.43 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | AIME | PEARL | 19121 | 34.80 | 549.49 | 15.70 | 2.52 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | AIME | AR | 9600 | 44.03 | 218.05 | 1 | 2.52 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | CNNDM | PEARL | 28628 | 215.73 | 132.70 | 4.14 | 1.63 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | CNNDM | AR | 25600 | 314.41 | 81.42 | 1 | 1.63 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | GSM8K | PEARL | 38475 | 139.75 | 275.31 | 7.48 | 2.21 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | GSM8K | AR | 25600 | 205.12 | 124.80 | 1 | 2.21 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | HumanEval | PEARL | 43900 | 119.50 | 367.36 | 10.28 | 2.24 |
+| models--Qwen--Qwen2.5-3B-Instruct | models--Qwen--Qwen2.5-72B-Instruct | 16 | HumanEval | AR | 25600 | 156.09 | 164.00 | 1 | 2.24 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 1 | AIME | PEARL | 16573 | 245.57 | 67.49 | 6.46 | 3.20 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 1 | AIME | AR | 12000 | 569.45 | 21.07 | 1 | 3.20 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 1 | CNNDM | PEARL | 23509 | 621.93 | 37.80 | 3.15 | 1.91 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 1 | CNNDM | AR | 25600 | 1296.86 | 19.74 | 1 | 1.91 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 1 | GSM8K | PEARL | 36829 | 529.91 | 69.50 | 6.91 | 3.48 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 1 | GSM8K | AR | 25600 | 1281.92 | 19.97 | 1 | 3.48 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 1 | HumanEval | PEARL | 28896 | 573.66 | 50.38 | 4.37 | 2.38 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 1 | HumanEval | AR | 25600 | 1210.97 | 21.14 | 1 | 2.38 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 4 | AIME | PEARL | 16757 | 81.74 | 205.01 | 6.33 | 2.87 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 4 | AIME | AR | 11200 | 157.06 | 71.31 | 1 | 2.87 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 4 | CNNDM | PEARL | 23980 | 316.36 | 75.80 | 3.22 | 1.76 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 4 | CNNDM | AR | 25600 | 592.73 | 43.20 | 1 | 1.76 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 4 | GSM8K | PEARL | 37164 | 200.89 | 185.00 | 6.88 | 3.12 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 4 | GSM8K | AR | 25600 | 431.79 | 59.29 | 1 | 3.12 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 4 | HumanEval | PEARL | 29155 | 225.68 | 129.19 | 4.47 | 2.22 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 4 | HumanEval | AR | 25600 | 440.01 | 58.18 | 1 | 2.22 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 8 | AIME | PEARL | 15559 | 36.69 | 424.08 | 6.21 | 2.70 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 8 | AIME | AR | 11200 | 71.34 | 157.00 | 1 | 2.70 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 8 | CNNDM | PEARL | 23599 | 201.53 | 117.10 | 3.16 | 1.63 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 8 | CNNDM | AR | 25600 | 356.05 | 71.90 | 1 | 1.63 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 8 | GSM8K | PEARL | 36507 | 108.62 | 336.08 | 6.73 | 2.87 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 8 | GSM8K | AR | 25600 | 216.67 | 118.15 | 1 | 2.87 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 8 | HumanEval | PEARL | 29057 | 126.33 | 230.01 | 4.43 | 2.10 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 8 | HumanEval | AR | 25600 | 233.15 | 109.80 | 1 | 2.10 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 16 | AIME | PEARL | 13289 | 19.34 | 687.16 | 6.15 | 2.45 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 16 | AIME | AR | 9600 | 34.26 | 280.20 | 1 | 2.45 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 16 | CNNDM | PEARL | 23611 | 124.93 | 188.98 | 3.16 | 1.48 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 16 | CNNDM | AR | 25600 | 200.14 | 127.91 | 1 | 1.48 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 16 | GSM8K | PEARL | 36719 | 60.91 | 602.81 | 6.82 | 2.62 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 16 | GSM8K | AR | 25600 | 111.15 | 230.32 | 1 | 2.62 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 16 | HumanEval | PEARL | 28960 | 69.10 | 419.10 | 4.41 | 1.96 |
+| models--Qwen--Qwen3-0.6B | models--Qwen--Qwen3-32B | 16 | HumanEval | AR | 25600 | 119.72 | 213.84 | 1 | 1.96 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 1 | AIME | PEARL | 17127 | 210.03 | 81.54 | 7.74 | 2.32 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 1 | AIME | AR | 12000 | 340.81 | 35.21 | 1 | 2.32 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 1 | CNNDM | PEARL | 25794 | 498.63 | 51.73 | 3.84 | 2.09 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 1 | CNNDM | AR | 25600 | 1032.26 | 24.80 | 1 | 2.09 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 1 | GSM8K | PEARL | 37938 | 545.71 | 69.52 | 8.73 | 2.73 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 1 | GSM8K | AR | 25600 | 1005.89 | 25.45 | 1 | 2.73 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 1 | HumanEval | PEARL | 29618 | 418.92 | 70.70 | 5.07 | 1.94 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 1 | HumanEval | AR | 25600 | 701.76 | 36.48 | 1 | 1.94 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 4 | AIME | PEARL | 16942 | 87.08 | 194.56 | 7.64 | 2.13 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 4 | AIME | AR | 11200 | 122.78 | 91.22 | 1 | 2.13 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 4 | CNNDM | PEARL | 26311 | 240.51 | 109.40 | 3.92 | 1.92 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 4 | CNNDM | AR | 25600 | 442.06 | 57.91 | 1 | 1.92 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 4 | GSM8K | PEARL | 38302 | 239.53 | 159.90 | 8.68 | 2.47 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 4 | GSM8K | AR | 25600 | 395.67 | 64.70 | 1 | 2.47 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 4 | HumanEval | PEARL | 29661 | 179.91 | 164.86 | 5.07 | 1.81 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 4 | HumanEval | AR | 25600 | 280.69 | 91.20 | 1 | 1.81 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 8 | AIME | PEARL | 15822 | 41.24 | 383.62 | 7.50 | 2.07 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 8 | AIME | AR | 11200 | 60.44 | 185.31 | 1 | 2.07 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 8 | CNNDM | PEARL | 25535 | 148.69 | 171.74 | 3.80 | 1.80 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 8 | CNNDM | AR | 25600 | 267.25 | 95.79 | 1 | 1.80 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 8 | GSM8K | PEARL | 37498 | 113.84 | 329.39 | 8.46 | 2.37 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 8 | GSM8K | AR | 25600 | 183.92 | 139.19 | 1 | 2.37 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 8 | HumanEval | PEARL | 29255 | 92.52 | 316.20 | 4.96 | 1.76 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 8 | HumanEval | AR | 25600 | 142.79 | 179.28 | 1 | 1.76 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 16 | AIME | PEARL | 13532 | 21.05 | 642.74 | 7.43 | 1.98 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 16 | AIME | AR | 9600 | 29.60 | 324.32 | 1 | 1.98 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 16 | CNNDM | PEARL | 26307 | 88.07 | 298.71 | 3.86 | 1.63 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 16 | CNNDM | AR | 25600 | 140.30 | 182.47 | 1 | 1.63 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 16 | GSM8K | PEARL | 37732 | 65.65 | 574.83 | 8.59 | 2.24 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 16 | GSM8K | AR | 25600 | 99.84 | 256.40 | 1 | 2.24 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 16 | HumanEval | PEARL | 29611 | 49.33 | 600.22 | 5.06 | 1.62 |
+| models--Qwen--Qwen3-1.7B | models--Qwen--Qwen3-32B | 16 | HumanEval | AR | 25600 | 69.15 | 370.21 | 1 | 1.62 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | AIME | PEARL | 23207 | 423.16 | 54.84 | 8.42 | 3.00 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | AIME | AR | 12000 | 656.09 | 18.29 | 1 | 3.00 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | CNNDM | PEARL | 37517 | 1024.77 | 36.61 | 5.37 | 2.49 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | CNNDM | AR | 25600 | 1738.00 | 14.73 | 1 | 2.49 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | GSM8K | PEARL | 85060 | 1086.89 | 78.26 | 24.02 | 5.27 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | GSM8K | AR | 25600 | 1722.75 | 14.86 | 1 | 5.27 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | HumanEval | PEARL | 68898 | 922.46 | 74.69 | 12.87 | 4.05 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | HumanEval | AR | 25600 | 1388.29 | 18.44 | 1 | 4.05 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | AIME | PEARL | 23432 | 130.67 | 179.32 | 8.46 | 2.76 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | AIME | AR | 11200 | 172.40 | 64.98 | 1 | 2.76 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | CNNDM | PEARL | 38289 | 486.51 | 78.70 | 5.48 | 2.29 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | CNNDM | AR | 25600 | 735.42 | 34.81 | 1 | 2.29 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | GSM8K | PEARL | 86776 | 453.62 | 191.31 | 24.50 | 4.88 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | GSM8K | AR | 25600 | 653.73 | 39.16 | 1 | 4.88 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | HumanEval | PEARL | 68159 | 363.30 | 187.61 | 12.73 | 3.75 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | HumanEval | AR | 25600 | 511.76 | 50.02 | 1 | 3.75 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | AIME | PEARL | 21808 | 62.46 | 349.14 | 8.50 | 2.65 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | AIME | AR | 11200 | 85.00 | 131.76 | 1 | 2.65 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | CNNDM | PEARL | 38125 | 291.60 | 130.74 | 5.49 | 2.19 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | CNNDM | AR | 25600 | 428.81 | 59.70 | 1 | 2.19 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | GSM8K | PEARL | 84931 | 225.88 | 376.00 | 24.06 | 4.70 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | GSM8K | AR | 25600 | 319.84 | 80.04 | 1 | 4.70 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | HumanEval | PEARL | 67602 | 196.23 | 344.51 | 12.62 | 3.59 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | HumanEval | AR | 25600 | 267.25 | 95.79 | 1 | 3.59 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | AIME | PEARL | 18248 | 36.17 | 504.57 | 7.39 | 2.45 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | AIME | AR | 9600 | 46.63 | 205.90 | 1 | 2.45 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | CNNDM | PEARL | 38875 | 188.03 | 206.75 | 5.51 | 2.01 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | CNNDM | AR | 25600 | 248.64 | 102.96 | 1 | 2.01 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | GSM8K | PEARL | 86419 | 137.28 | 629.50 | 24.66 | 4.31 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | GSM8K | AR | 25600 | 175.22 | 146.10 | 1 | 4.31 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | HumanEval | PEARL | 68789 | 114.77 | 599.37 | 13.35 | 3.39 |
+| models--meta-llama--Llama-3.2-1B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | HumanEval | AR | 25600 | 144.50 | 177.17 | 1 | 3.39 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | AIME | PEARL | 21708 | 479.21 | 45.30 | 10.33 | 2.50 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | AIME | AR | 12000 | 663.35 | 18.09 | 1 | 2.50 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | CNNDM | PEARL | 39521 | 1130.79 | 34.95 | 7.20 | 2.48 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | CNNDM | AR | 25600 | 1817.00 | 14.09 | 1 | 2.48 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | GSM8K | PEARL | 60758 | 1286.68 | 47.22 | 22.91 | 3.27 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | GSM8K | AR | 25600 | 1774.08 | 14.43 | 1 | 3.27 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | HumanEval | PEARL | 59879 | 1068.12 | 56.06 | 20.76 | 3.07 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 1 | HumanEval | AR | 25600 | 1402.00 | 18.26 | 1 | 3.07 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | AIME | PEARL | 22159 | 183.13 | 121.00 | 10.38 | 2.30 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | AIME | AR | 11200 | 212.93 | 52.60 | 1 | 2.30 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | CNNDM | PEARL | 39517 | 496.44 | 79.60 | 7.20 | 2.29 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | CNNDM | AR | 25600 | 736.69 | 34.75 | 1 | 2.29 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | GSM8K | PEARL | 61314 | 557.31 | 110.02 | 22.91 | 2.97 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | GSM8K | AR | 25600 | 691.52 | 37.02 | 1 | 2.97 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | HumanEval | PEARL | 60551 | 390.65 | 155.00 | 20.99 | 2.82 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 4 | HumanEval | AR | 25600 | 464.61 | 55.10 | 1 | 2.82 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | AIME | PEARL | 20336 | 91.56 | 222.10 | 10.25 | 2.22 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | AIME | AR | 11200 | 112.00 | 100.00 | 1 | 2.22 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | CNNDM | PEARL | 39763 | 313.34 | 126.90 | 7.14 | 2.18 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | CNNDM | AR | 25600 | 440.00 | 58.18 | 1 | 2.18 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | GSM8K | PEARL | 60855 | 309.23 | 196.80 | 22.58 | 2.82 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | GSM8K | AR | 25600 | 366.60 | 69.83 | 1 | 2.82 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | HumanEval | PEARL | 59587 | 212.81 | 280.00 | 20.46 | 2.70 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 8 | HumanEval | AR | 25600 | 246.63 | 103.80 | 1 | 2.70 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | AIME | PEARL | 17392 | 49.34 | 352.49 | 10.37 | 2.11 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | AIME | AR | 9600 | 57.27 | 167.63 | 1 | 2.11 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | CNNDM | PEARL | 38942 | 190.15 | 204.80 | 7.01 | 2.02 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | CNNDM | AR | 25600 | 252.47 | 101.40 | 1 | 2.02 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | GSM8K | PEARL | 61661 | 179.31 | 343.89 | 22.36 | 2.65 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | GSM8K | AR | 25600 | 197.38 | 129.70 | 1 | 2.65 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | HumanEval | PEARL | 59519 | 126.91 | 469.00 | 20.43 | 2.53 |
+| models--meta-llama--Llama-3.2-3B-Instruct | models--meta-llama--Meta-Llama-3.1-70B-Instruct | 16 | HumanEval | AR | 25600 | 137.63 | 186.00 | 1 | 2.53 |
